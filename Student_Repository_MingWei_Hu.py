@@ -120,6 +120,30 @@ class Course:
         self.letter_grades[student_cwid] = letter_grade
 
 
+class Major:
+    ''' major object for University '''
+
+    def __init__(self, name: str) -> None:
+        ''' initialize object with course data '''
+        self.name: str = name
+        # initialize course containers
+        self.required_course_name_set: Set[str] = set()
+        self.elective_course_name_set: Set[str] = set()
+
+    def has_course(self, course_name: str):
+        ''' check if the course is included in this major '''
+        return course_name in self.required_course_name_set \
+            or course_name in self.elective_course_name_set
+
+    def add_required_course_name(self, course_name: str):
+        ''' add a required course name '''
+        self.required_course_name_set.add(course_name)
+
+    def add_elective_course_name(self, course_name: str):
+        ''' add an elective course name '''
+        self.elective_course_name_set.add(course_name)
+
+
 class UniversityFilesInvalid(Exception):
     ''' custom invalid files exception'''
 
@@ -141,6 +165,7 @@ class University:
     STUDENT_FILE_NAME: str = "students.txt"
     INSTRUCTOR_FILE_NAME: str = "instructors.txt"
     GRADE_FILE_NAME: str = "grades.txt"
+    MAJOR_FILE_NAME: str = "majors.txt"
 
     def __init__(self, directory: str) -> None:
         ''' initialize object with data file directory '''
@@ -167,16 +192,55 @@ class University:
 
         # read data from required files
         try:
+            self.__parse_majors()
             self.__parse_students()
             self.__parse_instructors()
             self.__parse_grades()
-        
+
         # handle unmatched fields
         except ValueError as e:
             raise UniversityDataInvalid(f'{e}')
 
+    def __parse_majors(self):
+        ''' read data from majors.txt '''
 
-    # @exception_containment
+        # temp Dict
+        majors: Dict[str, Major] = {}
+        path = join(self.directory, University.MAJOR_FILE_NAME)
+
+        for data in file_reader(path, 3, header=True):
+            if all(data):
+                # read data tuple from file reader generator
+                name, r_or_e, course_name = data
+
+                if name not in majors:
+                    majors[name] = Major(name)
+
+                major: Major = majors[name]
+
+                if major.has_course(course_name):
+                    # handle duplicate major course entries
+                    raise UniversityDataInvalid(
+                        f'Duplicate course data of "{name}": "{course_name}".')
+
+                elif r_or_e == 'R':
+                    majors[name].add_required_course_name(course_name)
+                elif r_or_e == 'E':
+                    majors[name].add_elective_course_name(course_name)
+                
+                else:
+                    # handle unknown course type entries
+                    raise UniversityDataInvalid(
+                        f'Invalid Required/Elective type for "{course_name}" of "{name}".')
+
+            # handle missing value from a data entry
+            else:
+                raise UniversityDataInvalid(
+                    'Missing value(s) in majors file.')
+
+        # overwrite university students data with file data stored in temp
+        self.majors = majors
+
     def __parse_students(self):
         ''' read data from students.txt '''
 
@@ -187,24 +251,28 @@ class University:
         for data in file_reader(path, 3, ';', True):
             if all(data):
                 # read data tuple from file reader generator
-                cwid, name, major = data
+                cwid, name, major_name = data
+
+                # handle unknown major of University
+                if major_name not in self.majors:
+                    raise UniversityDataInvalid(
+                        f'Unknown major {major_name} for student {cwid}.')
 
                 # handle duplicate entries
                 if cwid in students:
                     raise UniversityDataInvalid(
                         f'Duplicate student data: {cwid}.')
 
-                students[cwid] = Student(cwid, name, major)
+                students[cwid] = Student(cwid, name, major_name)
 
             # handle missing value from a data entry
             else:
                 raise UniversityDataInvalid(
-                    'Missing value(s) in student file.')
+                    'Missing value(s) in students file.')
 
         # overwrite university students data with file data stored in temp
         self.students = students
 
-    # @exception_containment
     def __parse_instructors(self):
         ''' read data from instructors.txt '''
 
@@ -217,6 +285,11 @@ class University:
                 # read data tuple from file reader generator
                 cwid, name, department = data
 
+                # handle unknown major/department of University
+                if department not in self.majors:
+                    raise UniversityDataInvalid(
+                        f'Unknown department {department} for instructor {cwid}.')
+
                 # handle duplicate entries
                 if cwid in instructors:
                     raise UniversityDataInvalid(
@@ -227,12 +300,11 @@ class University:
             # handle missing value from a data entry
             else:
                 raise UniversityDataInvalid(
-                    'Missing value(s) in intructor file.')
+                    'Missing value(s) in intructors file.')
 
         # overwrite university data with file data stored in temp
         self.instructors = instructors
 
-    # @exception_containment
     def __parse_grades(self):
         ''' read data from grades.txt '''
 
@@ -250,12 +322,12 @@ class University:
                 # handle unknown student of grade
                 if student_cwid not in self.students:
                     raise UniversityDataInvalid(
-                        f'No student {student_cwid} for grade data.')
+                        f'Unknown student {student_cwid} for grade data.')
 
                 # handle unknown instructor of grade
                 if instructor_cwid not in self.instructors:
                     raise UniversityDataInvalid(
-                        f'No instructor {instructor_cwid} for grade data.')
+                        f'Unknown instructor {instructor_cwid} for grade data.')
 
                 # initialize course object on first grade entry
                 if course_key not in courses:
@@ -275,7 +347,7 @@ class University:
             # handle missing value from a data entry
             else:
                 raise UniversityDataInvalid(
-                    'Missing value(s) in intructor file.')
+                    'Missing value(s) in intructors file.')
 
         # overwrite university course data with file data stored in temp
         self.courses = courses
