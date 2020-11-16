@@ -1,10 +1,9 @@
-'''Homework 09
+'''Student Repository
 
     Data repository of courses, students, and instructors
 
     Author: Ming-Wei Hu
-    Version: 1.0.0
-    Last Updated: November 10th, 2020
+    Last Updated: November 16th, 2020
 
 '''
 # Imports

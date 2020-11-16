@@ -1,18 +1,17 @@
-"""Homework 09  (Tests)
+"""Student_Repository (Tests)
 
     Data repository of courses, students, and instructors (Tests)
 
     Author: Ming-Wei Hu
-    Version: 1.0.0
-    Last Updated: November 10th, 2020
+    Last Updated: November 16th, 2020
 
 """
 # imports
 from unittest import TestCase, main
 from typing import List, Tuple, Dict, Set
 
-from HW09_MingWei_Hu import University, Student, Instructor, Course
-from HW09_MingWei_Hu import UniversityFilesInvalid, UniversityDataInvalid
+from Student_Repository_MingWei_Hu import University, Student, Instructor, Course
+from Student_Repository_MingWei_Hu import UniversityFilesInvalid, UniversityDataInvalid
 
 
 class StudentTest(TestCase):
