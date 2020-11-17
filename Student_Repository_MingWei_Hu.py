@@ -197,11 +197,15 @@ class Course:
         self.name: str = name
         self.instructor_cwid: str = instructor_cwid
         # initialize letter grade Dict[student, grade] for students
-        self.letter_grades: Dict[str, str] = {}
+        self.student_grades: Dict[str, List[str]] = {}
 
-    def update_letter_grade(self, student_cwid: str, letter_grade: str):
+    def add_letter_grade(self, student_cwid: str, letter_grade: str):
         ''' update the letter grade of a student '''
-        self.letter_grades[student_cwid] = letter_grade
+        # add to dict if taking the course for the first time
+        if student_cwid not in self.student_grades:
+            self.student_grades[student_cwid] = []
+
+        self.student_grades[student_cwid].append(letter_grade)
 
 
 class Major:
@@ -420,7 +424,7 @@ class University:
                     courses[course_key] = Course(*course_key)
 
                 # update grade data in course
-                courses[course_key].update_letter_grade(
+                courses[course_key].add_letter_grade(
                     student_cwid, letter_grade)
 
                 # udpate grade data of university student
@@ -531,7 +535,7 @@ class University:
                     instructor.department,
                     course_name,
                     # count students by course grades Dict
-                    len(course.letter_grades.keys()),
+                    len(course.student_grades.keys()),
                 ])
 
         # print

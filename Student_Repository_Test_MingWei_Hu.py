@@ -82,15 +82,17 @@ class CourseTest(TestCase):
         test_course_student_cwid_1: str = '12345'
         test_course_student_cwid_2: str = '56789'
         test_letter_grade_1: str = 'A+'
-        test_letter_grade_2: str = 'A'
-        c.update_letter_grade(test_course_student_cwid_1, test_letter_grade_1)
-        c.update_letter_grade(test_course_student_cwid_2, test_letter_grade_2)
+        test_letter_grade_2: str = 'F'
+        test_letter_grade_3: str = 'A'
+        c.add_letter_grade(test_course_student_cwid_1, test_letter_grade_1)
+        c.add_letter_grade(test_course_student_cwid_2, test_letter_grade_2)
+        c.add_letter_grade(test_course_student_cwid_2, test_letter_grade_3)
 
-        expected_letter_grades: Dict[str, str] = {
-            f'{test_course_student_cwid_1}': test_letter_grade_1,
-            f'{test_course_student_cwid_2}': test_letter_grade_2,
+        expected_letter_grades: Dict[str, List[str]] = {
+            f'{test_course_student_cwid_1}': [test_letter_grade_1],
+            f'{test_course_student_cwid_2}': [test_letter_grade_2, test_letter_grade_3],
         }
-        self.assertDictEqual(expected_letter_grades, c.letter_grades)
+        self.assertDictEqual(expected_letter_grades, c.student_grades)
 
 
 class MajorTest(TestCase):
@@ -113,8 +115,10 @@ class MajorTest(TestCase):
             test_required_course_name_1, test_required_course_name_2}
         expected_elective_course_name_set: Set[str] = {
             test_elective_course_name_1, test_elective_course_name_2}
-        self.assertSetEqual(expected_elective_course_name_set, m.elective_course_name_set)
-        self.assertSetEqual(expected_required_course_name_set, m.required_course_name_set)
+        self.assertSetEqual(expected_elective_course_name_set,
+                            m.elective_course_name_set)
+        self.assertSetEqual(expected_required_course_name_set,
+                            m.required_course_name_set)
 
 
 class UniversityTest(TestCase):
@@ -125,7 +129,7 @@ class UniversityTest(TestCase):
         basic: University = University('./test_suites/basic_university')
 
         # test majors
-    
+
         majors_data: Set[Tuple[str]] = set()
         for name, major in basic.majors.items():
             for course_name in major.required_course_name_set:
@@ -207,6 +211,7 @@ class UniversityTest(TestCase):
             ('11461', 'SYS 750', 'A-', '98760'),
             ('11461', 'SYS 611', 'A', '98760'),
             ('11658', 'SSW 540', 'F', '98765'),
+            ('11658', 'SSW 540', 'A', '98765'),
             ('11714', 'SYS 611', 'A', '98760'),
             ('11714', 'SYS 645', 'C', '98760'),
             ('11788', 'SSW 540', 'A', '98765'),
@@ -214,9 +219,10 @@ class UniversityTest(TestCase):
 
         grades_data_by_course: Set[Tuple[str]] = set()
         for course_key, course in basic.courses.items():
-            for student_cwid, letter_grade in course.letter_grades.items():
-                grades_data_by_course.add(
-                    (student_cwid, course_key[0], letter_grade, course_key[1]))
+            for student_cwid, letter_grades in course.student_grades.items():
+                for letter_grade in letter_grades:
+                    grades_data_by_course.add(
+                        (student_cwid, course_key[0], letter_grade, course_key[1]))
 
         self.assertSetEqual(grades_data_by_course,
                             set(test_basic_grades_data))
@@ -231,7 +237,6 @@ class UniversityTest(TestCase):
         self.assertSetEqual(grades_data_by_students,
                             set(test_basic_grades_data))
 
-
         # test completed courses and gpa
         expected_basic_student_completed_courses: Dict[str, List[str]] = {
             '10103': ['CS 501', 'SSW 564', 'SSW 567', 'SSW 687'],
@@ -241,13 +246,13 @@ class UniversityTest(TestCase):
             '10183': ['SSW 689'],
             '11399': ['SSW 540'],
             '11461': ['SYS 611', 'SYS 750', 'SYS 800'],
-            '11658': [],
+            '11658': ['SSW 540'],
             '11714': ['SYS 611', 'SYS 645'],
             '11788': ['SSW 540'],
         }
         for cwid in expected_basic_student_completed_courses.keys():
             self.assertListEqual(expected_basic_student_completed_courses[cwid],
-                basic.students[cwid].get_completed_course_names())
+                                 basic.students[cwid].get_completed_course_names())
 
         expected_basic_student_gpa_display: Dict[str, str] = {
             '10103': '3.44',
@@ -257,16 +262,17 @@ class UniversityTest(TestCase):
             '10183': '4.0',
             '11399': '3.0',
             '11461': '3.92',
-            '11658': '0.0',
+            '11658': '2.0',
             '11714': '3.0',
             '11788': '4.0',
         }
         for cwid in expected_basic_student_completed_courses.keys():
             self.assertEqual(expected_basic_student_gpa_display[cwid],
-                basic.students[cwid].get_gpa_display())
+                             basic.students[cwid].get_gpa_display())
 
         # test directory exceptions
-        self.assertRaises(UniversityFilesInvalid, University, './test_suites/no_such_university')
+        self.assertRaises(UniversityFilesInvalid, University,
+                          './test_suites/no_such_university')
         self.assertRaises(UniversityFilesInvalid,
                           University, './test_suites/empty_university')
         self.assertRaises(UniversityFilesInvalid,
