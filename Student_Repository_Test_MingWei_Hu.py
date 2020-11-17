@@ -231,12 +231,48 @@ class UniversityTest(TestCase):
         self.assertSetEqual(grades_data_by_students,
                             set(test_basic_grades_data))
 
+
+        # test completed courses and gpa
+        expected_basic_student_completed_courses: Dict[str, List[str]] = {
+            '10103': ['CS 501', 'SSW 564', 'SSW 567', 'SSW 687'],
+            '10115': ['CS 545', 'SSW 564', 'SSW 567', 'SSW 687'],
+            '10172': ['SSW 555', 'SSW 567'],
+            '10175': ['SSW 564', 'SSW 567', 'SSW 687'],
+            '10183': ['SSW 689'],
+            '11399': ['SSW 540'],
+            '11461': ['SYS 611', 'SYS 750', 'SYS 800'],
+            '11658': [],
+            '11714': ['SYS 611', 'SYS 645'],
+            '11788': ['SSW 540'],
+        }
+        for cwid in expected_basic_student_completed_courses.keys():
+            self.assertListEqual(expected_basic_student_completed_courses[cwid],
+                basic.students[cwid].get_completed_course_names())
+
+        expected_basic_student_gpa_display: Dict[str, str] = {
+            '10103': '3.44',
+            '10115': '3.81',
+            '10172': '3.88',
+            '10175': '3.58',
+            '10183': '4.0',
+            '11399': '3.0',
+            '11461': '3.92',
+            '11658': '0.0',
+            '11714': '3.0',
+            '11788': '4.0',
+        }
+        for cwid in expected_basic_student_completed_courses.keys():
+            self.assertEqual(expected_basic_student_gpa_display[cwid],
+                basic.students[cwid].get_gpa_display())
+
         # test directory exceptions
         self.assertRaises(UniversityFilesInvalid, University, './test_suites/no_such_university')
         self.assertRaises(UniversityFilesInvalid,
                           University, './test_suites/empty_university')
         self.assertRaises(UniversityFilesInvalid,
                           University, './test_suites/incomplete_university')
+
+        # test invalid data exceptions
         self.assertRaises(UniversityDataInvalid, University,
                           './test_suites/missing_values_university')
         self.assertRaises(UniversityDataInvalid, University,
@@ -245,6 +281,10 @@ class UniversityTest(TestCase):
                           './test_suites/wrong_instructor_grades_university')
         self.assertRaises(UniversityDataInvalid, University,
                           './test_suites/wrong_fields_grades_university')
+        self.assertRaises(UniversityDataInvalid, University,
+                          './test_suites/wrong_major_student_university')
+        self.assertRaises(UniversityDataInvalid, University,
+                          './test_suites/wrong_department_instructor_university')
 
 
 if __name__ == "__main__":

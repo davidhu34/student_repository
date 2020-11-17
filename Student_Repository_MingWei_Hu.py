@@ -477,8 +477,7 @@ class University:
             # get major object of student
             major: Major = self.majors[student.major]
             # get sorted course names from Student
-            completed_courses: List[str] = sorted(
-                student.get_completed_course_names())
+            completed_courses: List[str] = student.get_completed_course_names()
             # check if any elective completed
             elective_done: bool = any([
                 course_name in major.elective_course_name_set

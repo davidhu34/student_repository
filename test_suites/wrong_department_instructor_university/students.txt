@@ -1,0 +1,2 @@
+CWID;Name;Major
+10103;Baldwin, C;SFEN
