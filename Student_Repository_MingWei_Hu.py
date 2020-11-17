@@ -311,7 +311,7 @@ class University:
                     majors[name].add_required_course_name(course_name)
                 elif r_or_e == 'E':
                     majors[name].add_elective_course_name(course_name)
-                
+
                 else:
                     # handle unknown course type entries
                     raise UniversityDataInvalid(
@@ -436,6 +436,27 @@ class University:
         # overwrite university course data with file data stored in temp
         self.courses = courses
 
+    def pretty_print_major_summary(self):
+        ''' print out major summary in pretty table '''
+        field_names: List[str] = [
+            'Major',
+            'Required Course',
+            'Electives',
+        ]
+        pt: PrettyTable = PrettyTable(field_names=field_names)
+
+        # add rows from university instructors
+        for name, major in self.majors.items():
+            pt.add_row([
+                name,
+                sorted(major.required_course_name_set),
+                sorted(major.elective_course_name_set),
+            ])
+
+        # print
+        print('Major Summary')
+        print(pt)
+
     def pretty_print_student_summary(self):
         ''' print out student summary in pretty table '''
         field_names: List[str] = [
@@ -454,7 +475,8 @@ class University:
             # get major object of student
             major: Major = self.majors[student.major]
             # get sorted course names from Student
-            completed_courses: List[str] = sorted(student.get_completed_course_names())
+            completed_courses: List[str] = sorted(
+                student.get_completed_course_names())
             # check if any elective completed
             elective_done: bool = any([
                 course_name in major.elective_course_name_set
@@ -524,6 +546,7 @@ def prompt_university_repo(dir: str = '') -> University:
     # create University and read data
     university: University = University(directory)
     # print required information
+    university.pretty_print_major_summary()
     university.pretty_print_student_summary()
     university.pretty_print_instructor_summary()
 
