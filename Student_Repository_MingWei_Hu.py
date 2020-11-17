@@ -143,17 +143,17 @@ class Student:
         scores: List[Decimal] = []
 
         # get all course grades for counting
-        # for course_records in self.courses_by_name.values():
-        #     for instructor_cwid, letter_grade in course_records:
-        #         scores.append(LETTER_GRADE_VALUE[letter_grade])
+        for course_records in self.courses_by_name.values():
+            for instructor_cwid, letter_grade in course_records:
+                scores.append(LETTER_GRADE_VALUE[letter_grade])
 
         # get passed course grades for counting (at most one for each course)
-        for course_name in reversed(self.courses_by_name.keys()):
-            # get latest passed grade for counting
-            latest_letter_grade: str = self.get_latest_passing_grade(
-                course_name)
-            if latest_letter_grade != None:
-                scores.append(LETTER_GRADE_VALUE[latest_letter_grade])
+        # for course_name in reversed(self.courses_by_name.keys()):
+        #     # get latest passed grade for counting
+        #     latest_letter_grade: str = self.get_latest_passing_grade(
+        #         course_name)
+        #     if latest_letter_grade != None:
+        #         scores.append(LETTER_GRADE_VALUE[latest_letter_grade])
 
         # no completed courses
         if not scores:
