@@ -10,7 +10,7 @@
 from unittest import TestCase, main
 from typing import List, Tuple, Dict, Set
 
-from Student_Repository_MingWei_Hu import University, Student, Instructor, Course
+from Student_Repository_MingWei_Hu import University, Student, Instructor, Course, Major
 from Student_Repository_MingWei_Hu import UniversityFilesInvalid, UniversityDataInvalid
 
 
@@ -30,17 +30,23 @@ class StudentTest(TestCase):
         test_course_name_1: str = 'ABC 123'
         test_course_name_2: str = 'EFG 456'
         test_letter_grade_1: str = 'A+'
-        test_letter_grade_2: str = 'B'
-        s.update_letter_grade(
-            (test_course_instructor_cwid_1, test_course_name_1), test_letter_grade_1)
-        s.update_letter_grade(
-            (test_course_instructor_cwid_2, test_course_name_2), test_letter_grade_2)
+        test_letter_grade_2: str = 'D'
+        test_letter_grade_3: str = 'C'
+        s.add_course(
+            test_course_name_1, test_course_instructor_cwid_1, test_letter_grade_1)
+        s.add_course(
+            test_course_name_2, test_course_instructor_cwid_2, test_letter_grade_2)
+        s.add_course(
+            test_course_name_2, test_course_instructor_cwid_1, test_letter_grade_3)
 
-        expected_letter_grades: Dict[Tuple[str], str] = {
-            (test_course_instructor_cwid_1, test_course_name_1): test_letter_grade_1,
-            (test_course_instructor_cwid_2, test_course_name_2): test_letter_grade_2,
+        expected_courses_by_name: Dict[str, Tuple[str]] = {
+            f'{test_course_name_1}': [(test_course_instructor_cwid_1, test_letter_grade_1)],
+            f'{test_course_name_2}': [
+                (test_course_instructor_cwid_2, test_letter_grade_2),
+                (test_course_instructor_cwid_1, test_letter_grade_3),
+            ],
         }
-        self.assertDictEqual(expected_letter_grades, s.letter_grades)
+        self.assertDictEqual(expected_courses_by_name, s.courses_by_name)
 
 
 class InstructorTest(TestCase):
@@ -87,19 +93,70 @@ class CourseTest(TestCase):
         self.assertDictEqual(expected_letter_grades, c.letter_grades)
 
 
+class MajorTest(TestCase):
+    def test_major(self):
+        ''' testing Major '''
+        test_name: str = 'DMPC'
+        m: Major = Major(test_name)
+        self.assertEqual(test_name, m.name)
+
+        test_required_course_name_1: str = 'ABC 123'
+        test_required_course_name_2: str = 'ABC 456'
+        test_elective_course_name_1: str = 'EFG 123'
+        test_elective_course_name_2: str = 'EFG 456'
+        m.add_required_course_name(test_required_course_name_1)
+        m.add_required_course_name(test_required_course_name_2)
+        m.add_elective_course_name(test_elective_course_name_1)
+        m.add_elective_course_name(test_elective_course_name_2)
+
+        expected_required_course_name_set: Set[str] = {
+            test_required_course_name_1, test_required_course_name_2}
+        expected_elective_course_name_set: Set[str] = {
+            test_elective_course_name_1, test_elective_course_name_2}
+        self.assertSetEqual(expected_elective_course_name_set, m.elective_course_name_set)
+        self.assertSetEqual(expected_required_course_name_set, m.required_course_name_set)
+
+
 class UniversityTest(TestCase):
     def test_university(self):
         ''' testing University '''
-        # test using data under ./stevens
+        # test using data under ./test_suites/basic_university
         # instantiate University
-        stevens: University = University('./stevens')
+        basic: University = University('./test_suites/basic_university')
+
+        # test majors
+    
+        majors_data: Set[Tuple[str]] = set()
+        for name, major in basic.majors.items():
+            for course_name in major.required_course_name_set:
+                majors_data.add((name, 'R', course_name))
+
+            for course_name in major.elective_course_name_set:
+                majors_data.add((name, 'E', course_name))
+
+        test_basic_majors_data: List[Tuple[str]] = [
+            ('SFEN', 'R', 'SSW 540'),
+            ('SFEN', 'R', 'SSW 564'),
+            ('SFEN', 'R', 'SSW 555'),
+            ('SFEN', 'R', 'SSW 567'),
+            ('SFEN', 'E', 'CS 501'),
+            ('SFEN', 'E', 'CS 513'),
+            ('SFEN', 'E', 'CS 545'),
+            ('SYEN', 'R', 'SYS 671'),
+            ('SYEN', 'R', 'SYS 612'),
+            ('SYEN', 'R', 'SYS 800'),
+            ('SYEN', 'E', 'SSW 810'),
+            ('SYEN', 'E', 'SSW 565'),
+            ('SYEN', 'E', 'SSW 540'),
+        ]
+        self.assertSetEqual(majors_data, set(test_basic_majors_data))
 
         # test students
         students_data: Set[Tuple[str]] = set([
             (cwid, student.name, student.major)
-            for cwid, student in stevens.students.items()
+            for cwid, student in basic.students.items()
         ])
-        test_stevens_students_data: List[Tuple[str]] = [
+        test_basic_students_data: List[Tuple[str]] = [
             ('10103', 'Baldwin, C', 'SFEN'),
             ('10115', 'Wyatt, X', 'SFEN'),
             ('10172', 'Forbes, I', 'SFEN'),
@@ -111,14 +168,14 @@ class UniversityTest(TestCase):
             ('11714', 'Morton, A', 'SYEN'),
             ('11788', 'Fuller, E', 'SYEN'),
         ]
-        self.assertSetEqual(students_data, set(test_stevens_students_data))
+        self.assertSetEqual(students_data, set(test_basic_students_data))
 
         # test instructors
         instructors_data: Set[Tuple[str]] = set([
             (cwid, instructor.name, instructor.department)
-            for cwid, instructor in stevens.instructors.items()
+            for cwid, instructor in basic.instructors.items()
         ])
-        test_stevens_instructors_data: List[Tuple[str]] = [
+        test_basic_instructors_data: List[Tuple[str]] = [
             ('98765', 'Einstein, A', 'SFEN'),
             ('98764', 'Feynman, R', 'SFEN'),
             ('98763', 'Newton, I', 'SFEN'),
@@ -127,10 +184,10 @@ class UniversityTest(TestCase):
             ('98760', 'Darwin, C', 'SYEN'),
         ]
         self.assertSetEqual(instructors_data, set(
-            test_stevens_instructors_data))
+            test_basic_instructors_data))
 
         # test grades (and courses)
-        test_stevens_grades_data: List[Tuple[str]] = [
+        test_basic_grades_data: List[Tuple[str]] = [
             ('10103', 'SSW 567', 'A', '98765'),
             ('10103', 'SSW 564', 'A-', '98764'),
             ('10103', 'SSW 687', 'B', '98764'),
@@ -156,43 +213,38 @@ class UniversityTest(TestCase):
         ]
 
         grades_data_by_course: Set[Tuple[str]] = set()
-        [
-            [
+        for course_key, course in basic.courses.items():
+            for student_cwid, letter_grade in course.letter_grades.items():
                 grades_data_by_course.add(
                     (student_cwid, course_key[0], letter_grade, course_key[1]))
-                for student_cwid, letter_grade in course.letter_grades.items()
-            ]
-            for course_key, course in stevens.courses.items()
-        ]
+
         self.assertSetEqual(grades_data_by_course,
-                            set(test_stevens_grades_data))
+                            set(test_basic_grades_data))
 
         grades_data_by_students: Set[Tuple[str]] = set()
-        [
-            [
-                grades_data_by_students.add(
-                    (student_cwid, course_key[0], letter_grade, course_key[1]))
-                for course_key, letter_grade in student.letter_grades.items()
-            ]
-            for student_cwid, student in stevens.students.items()
-        ]
+        for student_cwid, student in basic.students.items():
+            for course_name, course_records in student.courses_by_name.items():
+                for instructor_cwid, letter_grade in course_records:
+                    grades_data_by_students.add(
+                        (student_cwid, course_name, letter_grade, instructor_cwid))
+
         self.assertSetEqual(grades_data_by_students,
-                            set(test_stevens_grades_data))
+                            set(test_basic_grades_data))
 
         # test directory exceptions
-        self.assertRaises(UniversityFilesInvalid, University, './no_stevens')
+        self.assertRaises(UniversityFilesInvalid, University, './test_suites/no_such_university')
         self.assertRaises(UniversityFilesInvalid,
-                          University, './empty_stevens')
+                          University, './test_suites/empty_university')
         self.assertRaises(UniversityFilesInvalid,
-                          University, './incomplete_stevens')
+                          University, './test_suites/incomplete_university')
         self.assertRaises(UniversityDataInvalid, University,
-                          './missing_values_stevens')
+                          './test_suites/missing_values_university')
         self.assertRaises(UniversityDataInvalid, University,
-                          './wrong_student_grades_stevens')
+                          './test_suites/wrong_student_grades_university')
         self.assertRaises(UniversityDataInvalid, University,
-                          './wrong_instructor_grades_stevens')
+                          './test_suites/wrong_instructor_grades_university')
         self.assertRaises(UniversityDataInvalid, University,
-                          './wrong_fields_grades_stevens')
+                          './test_suites/wrong_fields_grades_university')
 
 
 if __name__ == "__main__":

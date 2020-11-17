@@ -68,7 +68,7 @@ def exception_containment(func):
         except KeyboardInterrupt:
             quit()
 
-        except Exception as e:
+        except (UniversityFilesInvalid, UniversityDataInvalid) as e:
             print(e)
 
     return inner_function
@@ -261,6 +261,7 @@ class University:
 
         # validate required files
         missing_files = str = ", ".join([f'"{file_name}"' for file_name in [
+            University.MAJOR_FILE_NAME,
             University.STUDENT_FILE_NAME,
             University.INSTRUCTOR_FILE_NAME,
             University.GRADE_FILE_NAME,
@@ -270,6 +271,7 @@ class University:
                 f'{missing_files} does not exist in "{directory}".')
 
         # data containers placeholders
+        self.major: Dict[str, Major] = {}
         self.students: Dict[str, Student] = {}
         self.instructors: Dict[str, Instructor] = {}
         self.courses: Dict[Tuple[str], Course] = {}

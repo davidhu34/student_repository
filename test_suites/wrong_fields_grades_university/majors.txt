@@ -1,0 +1,2 @@
+Major	Required/Elective	Course
+SFEN	R	SSW 567
