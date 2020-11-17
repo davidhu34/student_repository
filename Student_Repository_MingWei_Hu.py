@@ -8,7 +8,8 @@
 '''
 # Imports
 from datetime import datetime, timedelta
-from typing import Iterator, Tuple, List, Dict, Set, IO, Any, Callable
+from typing import Iterator, Tuple, List, Dict, Set, IO, Any, Callable, Optional
+from decimal import Decimal, ROUND_HALF_UP
 from os.path import abspath, basename, join, isdir, isfile
 from os import listdir
 from prettytable import PrettyTable
@@ -73,6 +74,23 @@ def exception_containment(func):
     return inner_function
 
 
+LETTER_GRADE_MINIMUM = 'C'
+LETTER_GRADE_VALUE = {
+    'A': Decimal('4.00'),
+    'A-': Decimal('3.75'),
+    'B+': Decimal('3.25'),
+    'B': Decimal('3.00'),
+    'B-': Decimal('2.75'),
+    'C+': Decimal('2.25'),
+    'C': Decimal('2.00'),
+    'C-': Decimal('0.00'),
+    'D+': Decimal('0.00'),
+    'D': Decimal('0.00'),
+    'D-': Decimal('0.00'),
+    'F': Decimal('0.00'),
+}
+
+
 class Student:
     ''' student object for University '''
 
@@ -81,12 +99,78 @@ class Student:
         self.cwid: str = cwid
         self.name: str = name
         self.major: str = major
-        # initialize letter grade Dict[course, grade] for courses
-        self.letter_grades: Dict[Tuple[str], str] = {}
+        # initialize course record Dict[course_name, (instructor_grade)] for courses
+        self.courses_by_name: Dict[str, List[Tuple[str]]] = {}
 
-    def update_letter_grade(self, course_key: Tuple[str], letter_grade: str = ''):
-        ''' update the letter grade of a course '''
-        self.letter_grades[course_key] = letter_grade
+    def add_course(self, course_name: str, instructor_cwid: str, letter_grade: str):
+        ''' add a record to course of name '''
+        # add to dict if first time taking the course
+        if course_name not in self.courses_by_name:
+            self.courses_by_name[course_name] = []
+
+        self.courses_by_name[course_name].append(
+            (instructor_cwid, letter_grade))
+
+    def get_latest_passing_grade(self, course_name: str) -> Optional[str]:
+        ''' get latest passing grade'''
+        # never taken the course
+        if course_name not in self.courses_by_name:
+            return None
+
+        course_records: List[Tuple[str]] = self.courses_by_name[course_name]
+        # get latest passed grade of course
+        for instructor_cwid, letter_grade in reversed(course_records):
+            if LETTER_GRADE_VALUE[letter_grade] >= LETTER_GRADE_VALUE[LETTER_GRADE_MINIMUM]:
+                return letter_grade
+
+        # no passing grade
+        return None
+
+    def is_course_completed(self, course_name: str) -> bool:
+        ''' check if course of name is completed '''
+        return self.get_latest_passing_grade(course_name) != None
+
+    def get_completed_course_names(self) -> List[str]:
+        ''' get completed course names '''
+        return sorted([
+            course_name
+            for course_name in self.courses_by_name.keys()
+            if self.is_course_completed(course_name)
+        ])
+
+    def get_gpa(self) -> Decimal:
+        ''' get average GPA '''
+        scores: List[Decimal] = []
+
+        # get all course grades for counting
+        # for course_records in self.courses_by_name.values():
+        #     for instructor_cwid, letter_grade in course_records:
+        #         scores.append(LETTER_GRADE_VALUE[letter_grade])
+
+        # get passed course grades for counting (at most one for each course)
+        for course_name in reversed(self.courses_by_name.keys()):
+            # get latest passed grade for counting
+            latest_letter_grade: str = self.get_latest_passing_grade(
+                course_name)
+            if latest_letter_grade != None:
+                scores.append(LETTER_GRADE_VALUE[latest_letter_grade])
+
+        # no completed courses
+        if not scores:
+            return Decimal('0.00')
+
+        # get mean of confidence occurances
+        else:
+            return sum(scores) / len(scores)
+
+    def get_gpa_display(self) -> str:
+        ''' rounded GPA string display '''
+        gpa: Decimal = self.get_gpa()
+        # round up Decimal object to percision 2
+        rounded_gpa: Decimal = gpa.quantize(
+            Decimal('.01'), rounding=ROUND_HALF_UP)
+        gpa_str: str = f'{rounded_gpa}'
+        return gpa_str[:-1] if gpa_str[-1] == '0' else gpa_str
 
 
 class Instructor:
@@ -338,8 +422,8 @@ class University:
                     student_cwid, letter_grade)
 
                 # udpate grade data of university student
-                self.students[student_cwid].update_letter_grade(
-                    course_key, letter_grade)
+                self.students[student_cwid].add_course(
+                    course_name, instructor_cwid, letter_grade)
 
                 # udpate university instructor's instructed courses
                 self.instructors[instructor_cwid].add_course(course_name)
@@ -357,19 +441,44 @@ class University:
         field_names: List[str] = [
             'CWID',
             'Name',
+            'Major',
             'Completed Courses',
+            'Remaing Required',
+            'Remaing Electives',
+            'GPA',
         ]
         pt: PrettyTable = PrettyTable(field_names=field_names)
 
         # add rows from university students
         for cwid, student in self.students.items():
+            # get major object of student
+            major: Major = self.majors[student.major]
+            # get sorted course names from Student
+            completed_courses: List[str] = sorted(student.get_completed_course_names())
+            # check if any elective completed
+            elective_done: bool = any([
+                course_name in major.elective_course_name_set
+                for course_name in completed_courses
+            ])
+
             pt.add_row([
                 cwid,
                 student.name,
-                # get course names by sorted course keys from Student
-                [course_name
-                    for course_name, instructor_cwid
-                    in sorted(student.letter_grades.keys())],
+                major.name,
+                completed_courses,
+                # filter major courses by checking if course is completed
+                [
+                    course_name
+                    for course_name in major.required_course_name_set
+                    if not student.is_course_completed(course_name)
+                ],
+                # [] if no more elective required to graduate
+                [] if elective_done else [
+                    course_name
+                    for course_name in major.elective_course_name_set
+                    if not student.is_course_completed(course_name)
+                ],
+                student.get_gpa_display()
             ])
 
         # print
