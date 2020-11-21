@@ -3,12 +3,12 @@
     Data repository of courses, students, and instructors (Tests)
 
     Author: Ming-Wei Hu
-    Last Updated: November 16th, 2020
+    Last Updated: November 21th, 2020
 
 """
 # imports
 from unittest import TestCase, main
-from typing import List, Tuple, Dict, Set
+from typing import List, Tuple, Dict, Set, Any
 
 from Student_Repository_MingWei_Hu import University, Student, Instructor, Course, Major
 from Student_Repository_MingWei_Hu import UniversityFilesInvalid, UniversityDataInvalid
@@ -140,18 +140,14 @@ class UniversityTest(TestCase):
 
         test_basic_majors_data: List[Tuple[str]] = [
             ('SFEN', 'R', 'SSW 540'),
-            ('SFEN', 'R', 'SSW 564'),
+            ('SFEN', 'R', 'SSW 810'),
             ('SFEN', 'R', 'SSW 555'),
-            ('SFEN', 'R', 'SSW 567'),
             ('SFEN', 'E', 'CS 501'),
-            ('SFEN', 'E', 'CS 513'),
-            ('SFEN', 'E', 'CS 545'),
-            ('SYEN', 'R', 'SYS 671'),
-            ('SYEN', 'R', 'SYS 612'),
-            ('SYEN', 'R', 'SYS 800'),
-            ('SYEN', 'E', 'SSW 810'),
-            ('SYEN', 'E', 'SSW 565'),
-            ('SYEN', 'E', 'SSW 540'),
+            ('SFEN', 'E', 'CS 546'),
+            ('CS', 'R', 'CS 570'),
+            ('CS', 'R', 'CS 546'),
+            ('CS', 'E', 'SSW 810'),
+            ('CS', 'E', 'SSW 565'),
         ]
         self.assertSetEqual(majors_data, set(test_basic_majors_data))
 
@@ -161,16 +157,10 @@ class UniversityTest(TestCase):
             for cwid, student in basic.students.items()
         ])
         test_basic_students_data: List[Tuple[str]] = [
-            ('10103', 'Baldwin, C', 'SFEN'),
-            ('10115', 'Wyatt, X', 'SFEN'),
-            ('10172', 'Forbes, I', 'SFEN'),
-            ('10175', 'Erickson, D', 'SFEN'),
-            ('10183', 'Chapman, O', 'SFEN'),
-            ('11399', 'Cordova, I', 'SYEN'),
-            ('11461', 'Wright, U', 'SYEN'),
-            ('11658', 'Kelly, P', 'SYEN'),
-            ('11714', 'Morton, A', 'SYEN'),
-            ('11788', 'Fuller, E', 'SYEN'),
+            ('10103', 'Jobs, S', 'SFEN'),
+            ('10115', 'Bezos, J', 'SFEN'),
+            ('10183', 'Musk, E', 'SFEN'),
+            ('11714', 'Gates, B', 'CS'),
         ]
         self.assertSetEqual(students_data, set(test_basic_students_data))
 
@@ -180,41 +170,24 @@ class UniversityTest(TestCase):
             for cwid, instructor in basic.instructors.items()
         ])
         test_basic_instructors_data: List[Tuple[str]] = [
-            ('98765', 'Einstein, A', 'SFEN'),
-            ('98764', 'Feynman, R', 'SFEN'),
-            ('98763', 'Newton, I', 'SFEN'),
-            ('98762', 'Hawking, S', 'SYEN'),
-            ('98761', 'Edison, A', 'SYEN'),
-            ('98760', 'Darwin, C', 'SYEN'),
+            ('98764', 'Cohen, R', 'SFEN'),
+            ('98763', 'Rowland, J', 'SFEN'),
+            ('98762', 'Hawking, S', 'CS'),
         ]
         self.assertSetEqual(instructors_data, set(
             test_basic_instructors_data))
 
         # test grades (and courses)
         test_basic_grades_data: List[Tuple[str]] = [
-            ('10103', 'SSW 567', 'A', '98765'),
-            ('10103', 'SSW 564', 'A-', '98764'),
-            ('10103', 'SSW 687', 'B', '98764'),
-            ('10103', 'CS 501', 'B', '98764'),
-            ('10115', 'SSW 567', 'A', '98765'),
-            ('10115', 'SSW 564', 'B+', '98764'),
-            ('10115', 'SSW 687', 'A', '98764'),
-            ('10115', 'CS 545', 'A', '98764'),
-            ('10172', 'SSW 555', 'A', '98763'),
-            ('10172', 'SSW 567', 'A-', '98765'),
-            ('10175', 'SSW 567', 'A', '98765'),
-            ('10175', 'SSW 564', 'A', '98764'),
-            ('10175', 'SSW 687', 'B-', '98764'),
-            ('10183', 'SSW 689', 'A', '98763'),
-            ('11399', 'SSW 540', 'B', '98765'),
-            ('11461', 'SYS 800', 'A', '98760'),
-            ('11461', 'SYS 750', 'A-', '98760'),
-            ('11461', 'SYS 611', 'A', '98760'),
-            ('11658', 'SSW 540', 'F', '98765'),
-            ('11658', 'SSW 540', 'A', '98765'),
-            ('11714', 'SYS 611', 'A', '98760'),
-            ('11714', 'SYS 645', 'C', '98760'),
-            ('11788', 'SSW 540', 'A', '98765'),
+            ('10103', 'SSW 810', 'A-', '98763'),
+            ('10103', 'CS 501', 'B', '98762'),
+            ('10115', 'SSW 810', 'A', '98763'),
+            ('10115', 'CS 546', 'F', '98762'),
+            ('10183', 'SSW 555', 'A', '98763'),
+            ('10183', 'SSW 810', 'A', '98763'),
+            ('11714', 'SSW 810', 'B-', '98763'),
+            ('11714', 'CS 546', 'A', '98764'),
+            ('11714', 'CS 570', 'A-', '98762'),
         ]
 
         grades_data_by_course: Set[Tuple[str]] = set()
@@ -239,36 +212,39 @@ class UniversityTest(TestCase):
 
         # test completed courses and gpa
         expected_basic_student_completed_courses: Dict[str, List[str]] = {
-            '10103': ['CS 501', 'SSW 564', 'SSW 567', 'SSW 687'],
-            '10115': ['CS 545', 'SSW 564', 'SSW 567', 'SSW 687'],
-            '10172': ['SSW 555', 'SSW 567'],
-            '10175': ['SSW 564', 'SSW 567', 'SSW 687'],
-            '10183': ['SSW 689'],
-            '11399': ['SSW 540'],
-            '11461': ['SYS 611', 'SYS 750', 'SYS 800'],
-            '11658': ['SSW 540'],
-            '11714': ['SYS 611', 'SYS 645'],
-            '11788': ['SSW 540'],
+            '10103': ['CS 501', 'SSW 810'],
+            '10115': ['SSW 810'],
+            '10183': ['SSW 555', 'SSW 810'],
+            '11714': ['CS 546', 'CS 570', 'SSW 810'],
         }
         for cwid in expected_basic_student_completed_courses.keys():
             self.assertListEqual(expected_basic_student_completed_courses[cwid],
                                  basic.students[cwid].get_completed_course_names())
 
         expected_basic_student_gpa_display: Dict[str, str] = {
-            '10103': '3.44',
-            '10115': '3.81',
-            '10172': '3.88',
-            '10175': '3.58',
+            '10103': '3.38',
+            '10115': '2.0',
             '10183': '4.0',
-            '11399': '3.0',
-            '11461': '3.92',
-            '11658': '2.0',
-            '11714': '3.0',
-            '11788': '4.0',
+            '11714': '3.5',
         }
         for cwid in expected_basic_student_completed_courses.keys():
             self.assertEqual(expected_basic_student_gpa_display[cwid],
                              basic.students[cwid].get_gpa_display())
+
+        # test db student grades summary
+        expected_student_grades_rows: Set[List[Any]] = set([
+            ('Bezos, J', '10115', 'SSW 810', 'A', 'Rowland, J'),
+            ('Bezos, J', '10115', 'CS 546', 'F', 'Hawking, S'),
+            ('Gates, B', '11714', 'SSW 810', 'B-', 'Rowland, J'),
+            ('Gates, B', '11714', 'CS 546', 'A', 'Cohen, R'),
+            ('Gates, B', '11714', 'CS 570', 'A-', 'Hawking, S'),
+            ('Jobs, S', '10103', 'SSW 810', 'A-', 'Rowland, J'),
+            ('Jobs, S', '10103', 'CS 501', 'B', 'Hawking, S'),
+            ('Musk, E', '10183', 'SSW 555', 'A', 'Rowland, J'),
+            ('Musk, E', '10183', 'SSW 810', 'A', 'Rowland, J'),
+        ])
+        self.assertSetEqual(expected_student_grades_rows, set(
+            [tuple(l) for l in University.student_grades_db('student_repository.db')]))
 
         # test directory exceptions
         self.assertRaises(UniversityFilesInvalid, University,
@@ -291,6 +267,12 @@ class UniversityTest(TestCase):
                           './test_suites/wrong_major_student_university')
         self.assertRaises(UniversityDataInvalid, University,
                           './test_suites/wrong_department_instructor_university')
+
+        # test invalid db
+        self.assertRaises(UniversityFilesInvalid, University.student_grades_db,
+                          './no_such_db.db')
+        self.assertRaises(UniversityFilesInvalid, University.student_grades_db,
+                          './not_a_db')
 
 
 if __name__ == "__main__":

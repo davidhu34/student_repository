@@ -3,7 +3,7 @@
     Data repository of courses, students, and instructors
 
     Author: Ming-Wei Hu
-    Last Updated: November 16th, 2020
+    Last Updated: November 21th, 2020
 
 '''
 # Imports
@@ -13,7 +13,8 @@ from decimal import Decimal, ROUND_HALF_UP
 from os.path import abspath, basename, join, isdir, isfile
 from os import listdir
 from prettytable import PrettyTable
-
+import sqlite3
+from sqlite3 import Connection, Cursor
 
 # custom exception
 class FileNotFound(Exception):
@@ -72,6 +73,25 @@ def exception_containment(func):
             print(e)
 
     return inner_function
+
+
+def execute_sql_on_db(db_connection: Connection, sql_path: str) -> Cursor:
+    ''' operate SQLite with a sql script file '''
+    # initialize db cursor
+    cursor: Cursor = db_connection.cursor()
+
+    try:
+        # open sql script file
+        sql_file: IO = open(sql_path)
+
+    # handle file not found
+    except FileNotFoundError:
+        raise FileNotFound(f'Cannot open SQL from "{sql_path}"!', sql_path)
+
+    with sql_file:
+        # read and execute sql script file
+        sql_script: str = sql_file.read()
+        return cursor.execute(sql_script)
 
 
 LETTER_GRADE_MINIMUM = 'C'
@@ -254,6 +274,44 @@ class University:
     INSTRUCTOR_FILE_NAME: str = "instructors.txt"
     GRADE_FILE_NAME: str = "grades.txt"
     MAJOR_FILE_NAME: str = "majors.txt"
+
+    @staticmethod
+    def student_grades_db(db_path: str) -> List[Any]:
+        ''' get student grades summary from SQLite '''
+        if not isfile(db_path) or not basename(db_path).endswith('.db'):
+            raise UniversityFilesInvalid(f'{db_path} is not a SQLite file.')
+
+        # connect to SQLite
+        db: Connection = sqlite3.connect(db_path)
+        # execute SQL script from "student grades"
+        cursor: Cursor = execute_sql_on_db(db, './queries/q5.sql')
+        # save results
+        results: List[Any] = cursor.fetchall()
+        # close SQLite connection
+        db.close()
+
+        return results
+
+    @staticmethod
+    def student_grades_table_db(db_path: str) -> None:
+        ''' print out student grades summary from SQLite in pretty table '''
+        # initialize PrettyTable
+        field_names: List[str] = [
+            'Name',
+            'CWID',
+            'Course',
+            'Grade',
+            'Instructor',
+        ]
+        pt: PrettyTable = PrettyTable(field_names=field_names)
+
+        # add each row of view to PrettyTable
+        for row in University.student_grades_db(db_path):
+            pt.add_row(row)
+
+        # print PrettyTable
+        print('Student Grade Summary')
+        print(pt)
 
     def __init__(self, directory: str) -> None:
         ''' initialize object with data file directory '''
@@ -554,6 +612,7 @@ def prompt_university_repo(dir: str = '') -> University:
     university.pretty_print_major_summary()
     university.pretty_print_student_summary()
     university.pretty_print_instructor_summary()
+    University.student_grades_table_db('student_repository.db')
 
     return university
 
