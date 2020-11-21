@@ -1,2 +1,2 @@
-StudentCWID|Course|Grade
-10103|SSW 567|A
+StudentCWID	Course	Grade
+10103	SSW 567	A

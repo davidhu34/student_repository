@@ -1,2 +1,2 @@
-StudentCWID|Course|Grade|InstructorCWID
-10103|SSW 567|A|99999
+StudentCWID	Course	Grade	InstructorCWID
+10103	SSW 567	A	99999

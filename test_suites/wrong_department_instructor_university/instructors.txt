@@ -1,2 +1,2 @@
-CWID|Instructor|Dept
-98765|Einstein, A|SYEN
+CWID	Instructor	Dept
+98765	Einstein, A	SYEN

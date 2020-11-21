@@ -338,7 +338,7 @@ class University:
         students: Dict[str, Student] = {}
         path = join(self.directory, University.STUDENT_FILE_NAME)
 
-        for data in file_reader(path, 3, ';', True):
+        for data in file_reader(path, 3, header=True):
             if all(data):
                 # read data tuple from file reader generator
                 cwid, name, major_name = data
@@ -370,7 +370,7 @@ class University:
         instructors: Dict[str, Instructor] = {}
         path = join(self.directory, University.INSTRUCTOR_FILE_NAME)
 
-        for data in file_reader(path, 3, '|', True):
+        for data in file_reader(path, 3, header=True):
             if all(data):
                 # read data tuple from file reader generator
                 cwid, name, department = data
@@ -402,7 +402,7 @@ class University:
         courses: Dict[Tuple[str], Course] = {}
         path = join(self.directory, University.GRADE_FILE_NAME)
 
-        for data in file_reader(path, 4, '|', True):
+        for data in file_reader(path, 4, header=True):
             if all(data):
                 # read data tuple from file reader generator
                 student_cwid, course_name, letter_grade, instructor_cwid = data

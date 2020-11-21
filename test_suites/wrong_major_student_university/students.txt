@@ -1,2 +1,2 @@
-CWID;Name;Major
-10103;Baldwin, C;SYEN
+CWID	Name	Major
+10103	Baldwin, C	SYEN
